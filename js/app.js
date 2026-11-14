@@ -145,6 +145,13 @@ async function abrirDetalle(id) {
 }
 
 function conectarEventos() {
+  // Bloquear zoom con dos dedos (pinch-to-zoom) en iOS
+  document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', e => {
+    if (e.touches.length > 1) e.preventDefault();
+  }, { passive: false });
+
   // Navegación inferior y botones de acceso rápido a Buscar
   $('.tabbar').addEventListener('click', e => {
     const b = e.target.closest('button');

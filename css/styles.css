@@ -3,9 +3,9 @@
   --texto:#F5F5F7; --texto-2:#9A9AA5; --acento:#7C5CFF; --exito:#34C759; --peligro:#FF453A;
   --netflix:#E50914; --crunchyroll:#F47521;
 }
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y}
 [hidden]{display:none !important}
-html,body{background:var(--fondo);color:var(--texto);font:15px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;touch-action:manipulation}
+html,body{background:var(--fondo);color:var(--texto);font:15px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;overscroll-behavior-y:none}
 body{padding-top:env(safe-area-inset-top);min-height:100dvh}
 button,input{font:inherit;color:inherit}
 button{border:0;background:none;cursor:pointer}
