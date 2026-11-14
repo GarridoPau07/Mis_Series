@@ -1,5 +1,5 @@
 // Service Worker: App Shell offline. Sube VERSION al publicar cambios.
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE = 'mis-series-' + VERSION;
 const SHELL = ['./', 'index.html', 'manifest.json', 'css/styles.css',
   'js/app.js', 'js/db.js', 'js/api.js', 'js/ui.js',
