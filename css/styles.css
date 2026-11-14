@@ -9,7 +9,7 @@ html,body{background:var(--fondo);color:var(--texto);font:15px/1.35 -apple-syste
 body{padding-top:env(safe-area-inset-top);min-height:100dvh}
 button,input{font:inherit;color:inherit}
 button{border:0;background:none;cursor:pointer}
-.vista{display:none;padding:8px 16px calc(100px + env(safe-area-inset-bottom))}
+.vista{display:none;padding:8px 16px calc(86px + env(safe-area-inset-bottom))}
 .vista.activa{display:block}
 .cabecera{padding:8px 0 16px}
 .cabecera-flex{display:flex;align-items:center;justify-content:space-between}
@@ -98,9 +98,26 @@ input[type=password],input[type=search],input[type=number]{width:100%;padding:12
 .input-cap-manual{width:76px;padding:8px 10px;border:0;border-radius:10px;background:var(--superficie-2);text-align:center;font-weight:600}
 .btn-peligro{width:100%;margin-top:20px;padding:13px;border-radius:12px;border:1px solid rgba(255,69,58,.4);color:var(--peligro);font-weight:600}
 
-/* TabBar */
-.tabbar{position:fixed;inset:auto 0 0;z-index:20;display:flex;padding:8px 16px calc(8px + env(safe-area-inset-bottom));background:var(--superficie);border-top:1px solid var(--borde)}
-.tabbar button{flex:1;display:grid;justify-items:center;gap:4px;padding:4px;font-size:11px;font-weight:500;color:var(--texto-2)}
-.tabbar button.activa{color:var(--acento)}
+/* TabBar estilo nativo iPhone */
+.tabbar{
+  position:fixed;inset:auto 0 0;z-index:20;display:flex;align-items:flex-start;
+  padding:6px 12px calc(4px + env(safe-area-inset-bottom));
+  background:rgba(22,22,28,.78);
+  backdrop-filter:blur(22px) saturate(180%);
+  -webkit-backdrop-filter:blur(22px) saturate(180%);
+  border-top:0.5px solid rgba(255,255,255,.12);
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;min-height:44px;padding:2px 4px;
+  font-size:10px;font-weight:500;letter-spacing:-0.01em;color:#8E8E93;
+  transition:transform .12s ease,color .12s ease;
+}
+.tabbar button:active{transform:scale(.91)}
+.tabbar button.activa{color:var(--acento);font-weight:600}
+.tabbar button .icono-fill{display:none}
+.tabbar button.activa .icono-out{display:none}
+.tabbar button.activa .icono-fill{display:block}
+
 :focus-visible{outline:2px solid var(--acento);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.mas,.primario,.secundario{transition:transform .1s}}
