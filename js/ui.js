@@ -22,11 +22,6 @@ function crearIconoSVG(tipo) {
   svg.setAttribute('stroke-linecap', 'round');
   svg.setAttribute('stroke-linejoin', 'round');
 
-  const trazos = {
-    lupa: ['<circle cx="11" cy="11" r="8"/>', '<path d="m21 21-4.3-4.3"/>'],
-    offline: ['<line x1="2" y1="2" x2="22" y2="22"/>', '<path d="M8.5 16.5a5 5 0 0 1 7 0"/>', '<path d="M2 8.82a15 15 0 0 1 4.17-2.65"/>', '<path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/>', '<path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/>', '<path d="M5 12.86a10 10 0 0 1 5.17-2.89"/>', '<line x1="12" y1="20" x2="12.01" y2="20"/>'],
-    llave: ['<circle cx="7.5" cy="15.5" r="5.5"/>', '<path d="m21 2-9.6 9.6"/>', '<path d="m15.5 7.5 3 3L22 7l-3-3"/>']
-  };
   const circ = el('div', 'circulo-icono');
   if (tipo === 'lupa') {
     const c = document.createElementNS(ns, 'circle');
@@ -88,6 +83,7 @@ export function pintarContadores(c) {
 export function crearTarjeta(s) {
   const art = el('article', 'tarjeta');
   art.dataset.id = s.id;
+  const estadoActual = s.estado === 'pendiente' ? 'ver-mas-tarde' : s.estado;
 
   const car = crearCaratula(s.titulo, s.caratula);
   const info = el('div', 'info');
@@ -103,17 +99,29 @@ export function crearTarjeta(s) {
     et.appendChild(em);
   }
 
+  const pct = estadoActual === 'completada'
+    ? 100
+    : (s.totalEpisodios ? Math.min(100, Math.round(100 * s.capituloActual / s.totalEpisodios)) : 0);
+
   const pista = el('div', 'pista');
   const barra = el('div', 'barra');
-  barra.style.width = (s.totalEpisodios ? Math.min(100, Math.round(100 * s.capituloActual / s.totalEpisodios)) : 0) + '%';
+  barra.style.width = pct + '%';
   pista.appendChild(barra);
 
   const total = s.totalEpisodios ?? '?';
-  const textoProg = `${s.estado === 'completada' ? 'Completada · ' : 'Cap. '}${s.capituloActual} / ${total}`;
+  let textoProg;
+  if (estadoActual === 'completada') {
+    textoProg = `Completada · ${s.capituloActual} / ${total}`;
+  } else if (estadoActual === 'ver-mas-tarde' && s.capituloActual === 0) {
+    textoProg = s.totalEpisodios ? `Ver más tarde · ${s.totalEpisodios} eps` : 'Ver más tarde';
+  } else {
+    textoProg = `Cap. ${s.capituloActual} / ${total}`;
+  }
+
   info.append(et, pista, el('p', 'progreso', textoProg));
   art.append(car, info);
 
-  if (s.estado !== 'completada') {
+  if (estadoActual !== 'completada') {
     const b = el('button', 'mas', '+1');
     b.dataset.accion = 'mas';
     b.setAttribute('aria-label', 'Sumar un capítulo a ' + s.titulo);
@@ -179,7 +187,7 @@ export function pintarResultadosBusqueda(resultados, fuenteLabel, idsGuardados) 
 }
 
 // --- VISTA 03: MODAL AÑADIR SERIE ---
-export function abrirModalAnadir(serie, plataformaInicial, capInicial) {
+export function abrirModalAnadir(serie, plataformaInicial, estadoInicial, capInicial) {
   const res = $('#modal-resumen');
   const car = crearCaratula(serie.titulo, serie.caratula, 'caratula-mini');
   const info = el('div', 'info');
@@ -190,6 +198,7 @@ export function abrirModalAnadir(serie, plataformaInicial, capInicial) {
   res.replaceChildren(car, info);
 
   marcarActivo('#modal-plataformas', 'plataforma', plataformaInicial);
+  marcarActivo('#modal-estados', 'estado', estadoInicial);
   $('#modal-cap').textContent = String(capInicial);
   $('#modal-anadir').hidden = false;
 }
@@ -201,6 +210,8 @@ export function cerrarModalAnadir() {
 // --- VISTA 04: DETALLE DE SERIE ---
 export function pintarDetalle(s) {
   const cont = $('#detalle-contenido');
+  const estadoActual = s.estado === 'pendiente' ? 'ver-mas-tarde' : s.estado;
+
   const cab = el('div', 'detalle-cabecera-serie');
   cab.appendChild(crearCaratula(s.titulo, s.caratula, 'caratula-grande'));
   cab.appendChild(el('h1', 'detalle-titulo', s.titulo));
@@ -216,12 +227,15 @@ export function pintarDetalle(s) {
   }
   cab.appendChild(et);
 
-  const pct = s.totalEpisodios ? Math.min(100, Math.round(100 * s.capituloActual / s.totalEpisodios)) : 0;
+  const pct = estadoActual === 'completada'
+    ? 100
+    : (s.totalEpisodios ? Math.min(100, Math.round(100 * s.capituloActual / s.totalEpisodios)) : 0);
+
   const progBox = el('div', 'panel detalle-progreso');
   const progTop = el('div', 'detalle-progreso-top');
   progTop.append(
     el('span', '', `Capítulo ${s.capituloActual} de ${s.totalEpisodios ?? '?'}`),
-    el('span', 'pct-texto', s.totalEpisodios ? `${pct} %` : '—')
+    el('span', 'pct-texto', (s.totalEpisodios || estadoActual === 'completada') ? `${pct} %` : '—')
   );
   const pista = el('div', 'pista');
   const barra = el('div', 'barra');
@@ -250,10 +264,10 @@ export function pintarDetalle(s) {
   estadosWrap.id = 'det-estados';
   [
     ['viendo', 'Viendo'],
-    ['pendiente', 'Pendiente'],
+    ['ver-mas-tarde', 'Ver más tarde'],
     ['completada', 'Completada']
   ].forEach(([val, texto]) => {
-    const b = el('button', s.estado === val ? 'activa' : '', texto);
+    const b = el('button', estadoActual === val ? 'activa' : '', texto);
     b.dataset.estado = val;
     estadosWrap.appendChild(b);
   });

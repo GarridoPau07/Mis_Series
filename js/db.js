@@ -28,13 +28,14 @@ const pedir = (store, modo, fn) => abrirDB().then(db => new Promise((res, rej) =
 }));
 
 /* Serie: { id, titulo, plataforma:'Netflix'|'Crunchyroll', fuente:'anilist'|'tmdb',
-   caratula, capituloActual, totalEpisodios|null, estado:'viendo'|'pendiente'|'completada',
+   caratula, capituloActual, totalEpisodios|null, estado:'viendo'|'ver-mas-tarde'|'completada',
    enEmision:boolean, creadoEn, actualizadoEn } */
 function normalizar(s) {
   const ahora = new Date().toISOString();
+  const estadoNorm = s.estado === 'pendiente' ? 'ver-mas-tarde' : (s.estado || 'viendo');
   return {
     caratula: null, totalEpisodios: null, capituloActual: 0,
-    estado: 'viendo', enEmision: false, creadoEn: ahora, ...s, actualizadoEn: ahora
+    enEmision: false, creadoEn: ahora, ...s, estado: estadoNorm, actualizadoEn: ahora
   };
 }
 
@@ -51,15 +52,20 @@ export async function actualizarSerie(id, cambios) {
   return nueva;
 }
 
-// +1 / -1 con límites; marca "completada" al llegar al final si ya no se emite.
+// +1 / -1 con límites; marca "completada" al llegar al final y pasa de "ver-mas-tarde" a "viendo" al empezar.
 export async function sumarCapitulo(id, delta = 1) {
   const s = await obtenerSerie(id);
   if (!s) return null;
   let cap = Math.max(0, s.capituloActual + delta);
   if (s.totalEpisodios != null) cap = Math.min(cap, s.totalEpisodios);
-  let estado = s.estado;
-  if (s.totalEpisodios != null && cap >= s.totalEpisodios && !s.enEmision) estado = 'completada';
-  else if (estado === 'completada') estado = 'viendo';
+  let estado = s.estado === 'pendiente' ? 'ver-mas-tarde' : s.estado;
+  if (s.totalEpisodios != null && cap >= s.totalEpisodios && !s.enEmision) {
+    estado = 'completada';
+  } else if (estado === 'completada') {
+    estado = 'viendo';
+  } else if (estado === 'ver-mas-tarde' && cap > 0) {
+    estado = 'viendo';
+  }
   return actualizarSerie(id, { capituloActual: cap, estado });
 }
 
@@ -78,7 +84,7 @@ export async function importarJSON(texto) {
   const db = await abrirDB();
   await new Promise((res, rej) => {
     const t = db.transaction('series', 'readwrite');
-    datos.series.forEach(s => s?.id && s?.titulo && t.objectStore('series').put(s));
+    datos.series.forEach(s => s?.id && s?.titulo && t.objectStore('series').put(normalizar(s)));
     t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
   });
   return datos.series.length;
